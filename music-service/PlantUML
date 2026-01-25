@@ -1,0 +1,134 @@
+Use Case Diagram
+
+left to right direction
+actor User
+actor Admin
+
+rectangle "Music Service" {
+    User --> (Register)
+    User --> (Login)
+    User --> (Browse Music)
+    User --> (Search Tracks)
+    User --> (Play Track)
+    User --> (Create Playlist)
+    User --> (Add Track to Playlist)
+    User --> (Like Track)
+
+    Admin --> (Add Artist)
+    Admin --> (Update Artist)
+    Admin --> (Delete Artist)
+    Admin --> (Add Album)
+    Admin --> (Update Album)
+    Admin --> (Delete Album)
+    Admin --> (Add Track)
+    Admin --> (Update Track)
+    Admin --> (Delete Track)
+}
+
+
+ERD (Entity Relationship Diagram)
+
+entity User {
+  *id : int
+  *email : string
+  *password : string
+}
+
+entity Artist {
+  *id : int
+  *name : string
+}
+
+entity Album {
+  *id : int
+  *title : string
+  *artist_id : int
+}
+
+entity Track {
+  *id : int
+  *title : string
+  *duration : int
+  *album_id : int
+}
+
+entity Playlist {
+  *id : int
+  *name : string
+  *user_id : int
+}
+
+entity PlaylistTrack {
+  *playlist_id : int
+  *track_id : int
+}
+
+entity Favorite {
+  *user_id : int
+  *track_id : int
+}
+
+
+
+
+UML Class Diagram
+
+class User {
+    +int ID
+    +string Email
+    +string Password
+    +Register()
+    +Login()
+}
+
+class Artist {
+    +int ID
+    +string Name
+}
+
+class Album {
+    +int ID
+    +string Title
+    +int ArtistID
+}
+
+class Track {
+    +int ID
+    +string Title
+    +int Duration
+    +int AlbumID
+}
+
+class Playlist {
+    +int ID
+    +string Name
+    +int UserID
+    +AddTrack(trackID)
+    +RemoveTrack(trackID)
+}
+
+class MusicService {
+    +PlayTrack(trackID)
+    +SearchTrack(query)
+}
+
+class PlaylistService {
+    +CreatePlaylist(userID)
+    +AddTrackToPlaylist(playlistID, trackID)
+}
+
+class UserService {
+    +Register(email, password)
+    +Login(email, password)
+}
+
+' Associations
+User "1" --> "*" Playlist
+Artist "1" --> "*" Album
+Album "1" --> "*" Track
+Playlist "*" --> "*" Track : "contains"
+User "*" --> "*" Track : "favorites"
+
+MusicService --> Track
+PlaylistService --> Playlist
+UserService --> User
