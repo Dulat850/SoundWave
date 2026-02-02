@@ -1,7 +1,8 @@
 package models
 
 type Playlist struct {
-	ID     int
-	Name   string
-	UserID int
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	UserID int    `json:"user_id"`
+	Tracks []int  `json:"tracks"` // ID треков
 }
