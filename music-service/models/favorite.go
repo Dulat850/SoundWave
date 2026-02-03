@@ -5,3 +5,5 @@ type Favorite struct {
 	UserID  int `json:"user_id"`
 	TrackID int `json:"track_id"`
 }
+
+//

@@ -7,3 +7,5 @@ type User struct {
 	Password string `json:"-"`    // не в JSON
 	Role     string `json:"role"` // "user" или "admin"
 }
+
+//

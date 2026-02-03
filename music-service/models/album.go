@@ -6,3 +6,5 @@ type Album struct {
 	ArtistID int    `json:"artist_id"`
 	CoverURL string `json:"cover_url"`
 }
+
+//

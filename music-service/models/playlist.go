@@ -6,3 +6,5 @@ type Playlist struct {
 	UserID int    `json:"user_id"`
 	Tracks []int  `json:"tracks"` // ID треков
 }
+
+//
