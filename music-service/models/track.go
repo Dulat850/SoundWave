@@ -6,4 +6,6 @@ type Track struct {
 	Duration int
 	category string
 	AlbumID  int
+	AudioURL any
+	ArtistID any
 }

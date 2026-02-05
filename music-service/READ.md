@@ -1,4 +1,31 @@
-Project Proposal
+### Сейчас фронт использует такие эндпоинты:
+
+Auth
+
+GET /auth/me
+POST /auth/login
+POST /auth/signup
+POST /auth/logout
+Tracks
+
+GET /tracks
+GET /tracks/:id
+POST /tracks (multipart/form-data)
+POST /tracks/:id/like
+DELETE /tracks/:id/like
+Artists
+
+GET /artists
+GET /artists/:id
+Playlists
+
+GET /playlists
+GET /playlists/:id
+POST /playlists
+DELETE /playlists/:id
+DELETE /playlists/:id/tracks/:trackId 
+
+### Project Proposal
 Music Streaming Service (Spotify-like)
 Project Title
 

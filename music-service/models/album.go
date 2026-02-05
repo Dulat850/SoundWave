@@ -5,4 +5,5 @@ type Album struct {
 	Title    string
 	ArtistID int
 	Tracks   []Track
+	CoverURL any
 }

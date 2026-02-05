@@ -41,10 +41,6 @@ type PlaylistRepository interface {
 	RemoveTrack(ctx context.Context, playlistID, trackID int) error
 }
 
-func NewPlaylistRepository(db *sql.DB) PlaylistRepository {
-	return &playlistRepository{db: db}
-}
-
 type UserRepository interface {
 	Create(ctx context.Context, user *models.User) error
 	GetByID(ctx context.Context, id int) (*models.User, error)
@@ -52,10 +48,6 @@ type UserRepository interface {
 	Update(ctx context.Context, user *models.User) error
 	Delete(ctx context.Context, id int) error
 	List(ctx context.Context, limit, offset int) ([]models.User, error)
-}
-
-func NewUserRepository(db *sql.DB) UserRepository {
-	return &userRepository{db: db}
 }
 
 //
