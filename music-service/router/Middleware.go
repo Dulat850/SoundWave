@@ -1,8 +1,10 @@
 package router
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"fmt"
-	"music-service/models"
 	"music-service/repositories"
 	"net/http"
 	"os"
@@ -14,58 +16,101 @@ import (
 )
 
 func CheckAuth(c *gin.Context) {
-
 	authHeader := c.GetHeader("Authorization")
-
 	if authHeader == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "authorization header is missing"})
 		return
 	}
 
-	authToken := strings.Split(authHeader, " ")
+	authToken := strings.SplitN(authHeader, " ", 2)
 	if len(authToken) != 2 || authToken[0] != "Bearer" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token format"})
+		return
+	}
+
+	secret := os.Getenv("SECRET")
+	if secret == "" {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "server misconfigured"})
 		return
 	}
 
 	tokenString := authToken[1]
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(os.Getenv("SECRET")), nil
+		return []byte(secret), nil
 	})
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 		return
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		c.Abort()
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 		return
 	}
 
-	if float64(time.Now().Unix()) > claims["exp"].(float64) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "token expired"})
-		c.AbortWithStatus(http.StatusUnauthorized)
+	expAny, ok := claims["exp"]
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token has no exp"})
 		return
 	}
 
-	var user models.User
-	repositories.DB.Where("ID=?", claims["id"]).Find(&user)
+	var expUnix int64
+	switch v := expAny.(type) {
+	case float64:
+		expUnix = int64(v)
+	case int64:
+		expUnix = v
+	case int:
+		expUnix = int64(v)
+	default:
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid exp type"})
+		return
+	}
 
-	if user.ID == 0 {
-		c.AbortWithStatus(http.StatusUnauthorized)
+	if time.Now().Unix() > expUnix {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token expired"})
+		return
+	}
+
+	idAny, ok := claims["id"]
+	if !ok {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token has no id"})
+		return
+	}
+
+	var userID int
+	switch v := idAny.(type) {
+	case float64:
+		userID = int(v)
+	case int:
+		userID = v
+	case int64:
+		userID = int(v)
+	default:
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid id type"})
+		return
+	}
+
+	if repositories.SQLDB == nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "db is not initialized"})
+		return
+	}
+	userRepo := repositories.NewUserRepository(repositories.SQLDB)
+
+	user, err := userRepo.GetByID(context.Background(), userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "db error"})
 		return
 	}
 
 	c.Set("currentUser", user)
-
 	c.Next()
-
 }

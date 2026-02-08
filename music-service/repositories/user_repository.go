@@ -29,6 +29,14 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	return user, err
 }
 
+func (r *userRepository) GetByUsername(ctx context.Context, username string) (*models.User, error) {
+	user := &models.User{}
+	query := `SELECT id, username, email, password, role FROM users WHERE username = $1`
+	err := r.db.QueryRowContext(ctx, query, username).
+		Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Role)
+	return user, err
+}
+
 func (r *userRepository) Update(ctx context.Context, user *models.User) error {
 	query := `UPDATE users SET username = $1, email = $2, password = $3, role = $4 WHERE id = $5`
 	_, err := r.db.ExecContext(ctx, query, user.Username, user.Email, user.Password, user.Role, user.ID)
@@ -59,5 +67,3 @@ func (r *userRepository) List(ctx context.Context, limit, offset int) ([]models.
 	}
 	return users, nil
 }
-
-//

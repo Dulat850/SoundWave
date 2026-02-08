@@ -17,6 +17,11 @@ type Config struct {
 	PostgresDB       string
 
 	MongoURI string
+
+	StorageAudioDir  string
+	StorageCoversDir string
+	StorageTmpDir    string
+	PublicBaseURL    string
 }
 
 func Load() *Config {
@@ -35,5 +40,18 @@ func Load() *Config {
 		PostgresDB:       os.Getenv("DB_NAME"),
 
 		MongoURI: os.Getenv("MONGODB_URI"),
+
+		StorageAudioDir:  envOrDefault("STORAGE_AUDIO_DIR", "storage/audio"),
+		StorageCoversDir: envOrDefault("STORAGE_COVERS_DIR", "storage/covers"),
+		StorageTmpDir:    envOrDefault("STORAGE_TMP_DIR", "storage/tmp"),
+		PublicBaseURL:    os.Getenv("PUBLIC_BASE_URL"),
 	}
+}
+
+func envOrDefault(key, def string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	return v
 }

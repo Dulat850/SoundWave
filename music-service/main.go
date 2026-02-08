@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"music-service/config"
 	"music-service/repositories"
 	"music-service/router"
@@ -9,17 +10,17 @@ import (
 )
 
 func init() {
-	_ = config.Load()
-	repositories.ConnectDB()
+	cfg := config.Load()
+	repositories.ConnectSQL(cfg)
 }
 
 func main() {
 
 	r := gin.Default()
 
-	r.POST("/auth/signup", router.CreateUser)
-	r.POST("/auth/login", router.Login)
-	r.GET("/user/profile", router.CheckAuth, router.GetUserProfile)
+	if err := router.SetupRoutes(r); err != nil {
+		log.Fatal(err)
+	}
 
 	_ = r.Run()
 }

@@ -10,9 +10,7 @@ type musicRepository struct {
 	db *sql.DB
 }
 
-/////////////////////////////////////////////////////
 // ARTISTS
-/////////////////////////////////////////////////////
 
 func (r *musicRepository) CreateArtist(ctx context.Context, artist *models.Artist) error {
 	query := `INSERT INTO artists (name, description) VALUES ($1, $2) RETURNING id`
@@ -64,9 +62,7 @@ func (r *musicRepository) ListArtists(ctx context.Context, limit, offset int) ([
 	return artists, rows.Err()
 }
 
-/////////////////////////////////////////////////////
 // ALBUMS
-/////////////////////////////////////////////////////
 
 func (r *musicRepository) CreateAlbum(ctx context.Context, album *models.Album) error {
 	query := `INSERT INTO albums (title, artist_id, cover_url) 
@@ -117,9 +113,7 @@ func (r *musicRepository) ListAlbumsByArtist(ctx context.Context, artistID int) 
 	return albums, rows.Err()
 }
 
-/////////////////////////////////////////////////////
 // TRACKS
-/////////////////////////////////////////////////////
 
 func (r *musicRepository) CreateTrack(ctx context.Context, track *models.Track) error {
 	query := `INSERT INTO tracks 

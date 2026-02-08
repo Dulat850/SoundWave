@@ -1,6 +1,9 @@
 package router
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"music-service/models"
 	"music-service/repositories"
 	"net/http"
@@ -13,39 +16,59 @@ import (
 )
 
 func Login(c *gin.Context) {
-
-	var authInput models.AuthInput
-
-	if err := c.ShouldBindJSON(&authInput); err != nil {
+	var input models.LoginInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	var userFound models.User
-	repositories.DB.Where("username=?", authInput.Username).Find(&userFound)
+	if repositories.SQLDB == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "db is not initialized"})
+		return
+	}
+	userRepo := repositories.NewUserRepository(repositories.SQLDB)
 
-	if userFound.ID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user not found"})
+	// сначала пробуем как username
+	userFound, err := userRepo.GetByUsername(context.Background(), input.Login)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+			return
+		}
+
+		// если username не найден — пробуем как email
+		userFound, err = userRepo.GetByEmail(context.Background(), input.Login)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "user not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "db error"})
+			return
+		}
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(input.Password)); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid password"})
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(authInput.Password)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid password"})
+	secret := os.Getenv("SECRET")
+	if secret == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "server misconfigured"})
 		return
 	}
 
 	generateToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":  userFound.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"exp": time.Now().Add(24 * time.Hour).Unix(),
 	})
 
-	token, err := generateToken.SignedString([]byte(os.Getenv("SECRET")))
-
+	token, err := generateToken.SignedString([]byte(secret))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to generate token"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		return
 	}
 
-	c.JSON(200, gin.H{
-		"token": token,
-	})
+	c.JSON(http.StatusOK, gin.H{"token": token})
 }
