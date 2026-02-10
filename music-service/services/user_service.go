@@ -20,6 +20,7 @@ type UserService interface {
 	UpdateMe(ctx context.Context, userID int, username string, email string) (*models.User, error)
 	ChangePassword(ctx context.Context, userID int, oldPassword, newPassword string) error
 	List(ctx context.Context, limit, offset int) ([]models.User, error)
+	Create(ctx context.Context, user *models.User) error
 }
 
 type userService struct {
@@ -140,4 +141,31 @@ func (s *userService) List(ctx context.Context, limit, offset int) ([]models.Use
 		offset = 0
 	}
 	return s.repo.List(ctx, limit, offset)
+}
+
+func (s *userService) Create(ctx context.Context, user *models.User) error {
+	// role по умолчанию
+	if user.Role == "" {
+		user.Role = "user"
+	}
+
+	// Проверка уникальности email
+	if _, err := s.repo.GetByEmail(ctx, user.Email); err == nil {
+		return fmt.Errorf("%w: email already exists", ErrConflict)
+	}
+
+	// Проверка уникальности username
+	if _, err := s.repo.GetByUsername(ctx, user.Username); err == nil {
+		return fmt.Errorf("%w: username already exists", ErrConflict)
+	}
+
+	// Хэшируем пароль перед вставкой
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.Password = string(hash)
+
+	// Вставка в БД через репозиторий
+	return s.repo.Create(ctx, user)
 }

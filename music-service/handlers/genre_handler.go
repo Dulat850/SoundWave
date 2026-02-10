@@ -2,10 +2,8 @@ package handlers
 
 import (
 	"errors"
-	"net/http"
-	"strconv"
-
 	"music-service/services"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -55,15 +53,4 @@ func (h *GenreHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": g})
-}
-
-func parseInt(raw string, def int) int {
-	if raw == "" {
-		return def
-	}
-	v, err := strconv.Atoi(raw)
-	if err != nil {
-		return def
-	}
-	return v
 }

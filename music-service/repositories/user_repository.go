@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"log"
 	"music-service/models"
 )
 
@@ -11,8 +12,22 @@ type userRepository struct {
 }
 
 func (r *userRepository) Create(ctx context.Context, user *models.User) error {
+	// если роль пустая, подставляем "user"
+	if user.Role == "" {
+		user.Role = "user"
+	}
+
 	query := `INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id`
-	return r.db.QueryRowContext(ctx, query, user.Username, user.Email, user.Password, user.Role).Scan(&user.ID)
+
+	// Выполняем вставку и сразу сканируем ID
+	err := r.db.QueryRowContext(ctx, query, user.Username, user.Email, user.Password, user.Role).Scan(&user.ID)
+	if err != nil {
+		// Временно логируем реальную ошибку
+		log.Println("REAL DB ERROR:", err)
+		return err
+	}
+
+	return nil
 }
 
 func (r *userRepository) GetByID(ctx context.Context, id int) (*models.User, error) {

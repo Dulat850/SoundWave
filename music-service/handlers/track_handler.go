@@ -109,8 +109,8 @@ func (h *TrackHandler) Top(c *gin.Context) {
 }
 
 func (h *TrackHandler) List(c *gin.Context) {
-	limit := parseInt(c.Query("limit"), 20)
-	offset := parseInt(c.Query("offset"), 0)
+	limit := ParseInt(c.Query("limit"), 20)
+	offset := ParseInt(c.Query("offset"), 0)
 	sort := c.DefaultQuery("sort", "new")
 
 	items, err := h.TrackSvc.List(c.Request.Context(), limit, offset, sort)
@@ -130,8 +130,8 @@ func (h *TrackHandler) ListByArtist(c *gin.Context) {
 		return
 	}
 
-	limit := parseInt(c.Query("limit"), 20)
-	offset := parseInt(c.Query("offset"), 0)
+	limit := ParseInt(c.Query("limit"), 20)
+	offset := ParseInt(c.Query("offset"), 0)
 	sort := c.DefaultQuery("sort", "new")
 
 	items, err := h.TrackSvc.ListByArtistID(c.Request.Context(), artistID, limit, offset, sort)
@@ -151,8 +151,8 @@ func (h *TrackHandler) ListByAlbum(c *gin.Context) {
 		return
 	}
 
-	limit := parseInt(c.Query("limit"), 20)
-	offset := parseInt(c.Query("offset"), 0)
+	limit := ParseInt(c.Query("limit"), 20)
+	offset := ParseInt(c.Query("offset"), 0)
 	sort := c.DefaultQuery("sort", "new")
 
 	items, err := h.TrackSvc.ListByAlbumID(c.Request.Context(), albumID, limit, offset, sort)
@@ -164,7 +164,7 @@ func (h *TrackHandler) ListByAlbum(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": items})
 }
 
-func parseInt(raw string, def int) int {
+func ParseInt(raw string, def int) int {
 	if raw == "" {
 		return def
 	}
@@ -173,17 +173,4 @@ func parseInt(raw string, def int) int {
 		return def
 	}
 	return v
-}
-
-func currentUserID(c *gin.Context) (int, bool) {
-	v, ok := c.Get("currentUser")
-	if !ok || v == nil {
-		return 0, false
-	}
-
-	u, ok := v.(*models.User)
-	if !ok || u == nil || u.ID <= 0 {
-		return 0, false
-	}
-	return u.ID, true
 }

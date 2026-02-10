@@ -70,3 +70,13 @@ func (h *ArtistHandler) CreateProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": a})
 }
+
+// GET /artists
+func (h *ArtistHandler) GetAll(c *gin.Context) {
+	artists, err := h.ArtistSvc.GetAll(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch artists"})
+		return
+	}
+	c.JSON(http.StatusOK, artists)
+}

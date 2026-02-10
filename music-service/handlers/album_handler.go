@@ -63,7 +63,7 @@ func (h *AlbumHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	a, err := h.AlbumSvc.GetByID(c.Request.Context(), id)
+	a, err := h.AlbumSvc.GetByIDAlbum(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, services.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "album not found"})

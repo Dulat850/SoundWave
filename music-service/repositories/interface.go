@@ -31,6 +31,7 @@ type ArtistRepository interface {
 	Create(ctx context.Context, a *models.Artist) error
 	GetByID(ctx context.Context, id int) (*models.Artist, error)
 	GetByUserID(ctx context.Context, userID int) (*models.Artist, error)
+	GetAll(ctx context.Context) ([]models.Artist, error)
 }
 
 func NewArtistRepository(db *sql.DB) ArtistRepository {

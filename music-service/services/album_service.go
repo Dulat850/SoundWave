@@ -10,7 +10,7 @@ import (
 
 type AlbumService interface {
 	Create(ctx context.Context, artistID int, title string, coverPath *string, releasedAt *string) (*models.Album, error)
-	GetByID(ctx context.Context, id int) (*models.Album, error)
+	GetByIDAlbum(ctx context.Context, id int) (*models.Album, error)
 	ListByArtistID(ctx context.Context, artistID int, limit, offset int) ([]models.Album, error)
 }
 
@@ -43,7 +43,7 @@ func (s *albumService) Create(ctx context.Context, artistID int, title string, c
 	return a, nil
 }
 
-func (s *albumService) GetByID(ctx context.Context, id int) (*models.Album, error) {
+func (s *albumService) GetByIDAlbum(ctx context.Context, id int) (*models.Album, error) {
 	a, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

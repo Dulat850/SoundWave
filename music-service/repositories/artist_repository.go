@@ -28,3 +28,21 @@ func (r *artistRepository) GetByUserID(ctx context.Context, userID int) (*models
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&a.ID, &a.UserID, &a.Name, &a.Bio, &a.AvatarPath)
 	return a, err
 }
+
+func (r *artistRepository) GetAll(ctx context.Context) ([]models.Artist, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT id, user_id, name, bio, avatar_path, created_at FROM artists")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var artists []models.Artist
+	for rows.Next() {
+		var a models.Artist
+		if err := rows.Scan(&a.ID, &a.UserID, &a.Name, &a.Bio, &a.AvatarPath, &a.CreatedAt); err != nil {
+			return nil, err
+		}
+		artists = append(artists, a)
+	}
+	return artists, nil
+}

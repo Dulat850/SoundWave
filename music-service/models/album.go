@@ -9,4 +9,5 @@ type Album struct {
 	CoverPath  *string   `json:"cover_path,omitempty"`
 	ReleasedAt *string   `json:"released_at,omitempty"` // YYYY-MM-DD (можно потом сделать time.Time)
 	CreatedAt  time.Time `json:"created_at"`
+	CoverURL   *string   `json:"cover_url,omitempty"`
 }

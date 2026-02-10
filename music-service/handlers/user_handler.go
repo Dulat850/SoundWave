@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"database/sql"
 	"errors"
-	"net/http"
-	"strconv"
-
+	"log"
 	"music-service/models"
 	"music-service/services"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +17,48 @@ type UserHandler struct {
 
 func NewUserHandler(userSvc services.UserService) *UserHandler {
 	return &UserHandler{UserSvc: userSvc}
+}
+
+type registerRequest struct {
+	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+// POST /auth/signup
+func (h *UserHandler) CreateUser(c *gin.Context) {
+	var req registerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user := &models.User{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password, // тут можно сразу хэшировать
+		Role:     "user",       // по умолчанию
+	}
+
+	err := h.UserSvc.Create(c.Request.Context(), user)
+	if err != nil {
+		// ⚠️ Показываем реальную ошибку БД для отладки
+		log.Println("SIGNUP ERROR:", err)
+
+		// Обрабатываем дубликаты и check constraints
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"id":       user.ID,
+		"email":    user.Email,
+		"username": user.Username,
+	})
 }
 
 // GET /users/me (auth)
@@ -124,28 +166,3 @@ func (h *UserHandler) List(c *gin.Context) {
 }
 
 // --- helpers ---
-
-func currentUserID(c *gin.Context) (int, bool) {
-	v, ok := c.Get("currentUser")
-	if !ok || v == nil {
-		return 0, false
-	}
-
-	u, ok := v.(*models.User)
-	if !ok || u == nil || u.ID <= 0 {
-		return 0, false
-	}
-	return u.ID, true
-}
-
-func parseIntQuery(c *gin.Context, key string, def int) int {
-	raw := c.Query(key)
-	if raw == "" {
-		return def
-	}
-	v, err := strconv.Atoi(raw)
-	if err != nil {
-		return def
-	}
-	return v
-}

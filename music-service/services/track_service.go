@@ -89,14 +89,3 @@ func normalizeTrackSort(sort string) string {
 		return "new"
 	}
 }
-
-func (s *trackService) GetByID(ctx context.Context, id int) (*models.Track, error) {
-	t, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNotFound
-		}
-		return nil, err
-	}
-	return t, nil
-}

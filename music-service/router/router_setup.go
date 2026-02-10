@@ -12,7 +12,12 @@ import (
 func SetupRoutes(r *gin.Engine) error {
 
 	// --- Auth (пока живёт в router) ---
-	r.POST("/auth/signup", CreateUser)
+	userRepo := repositories.NewUserRepository(repositories.SQLDB)
+	userSvc := services.NewUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userSvc)
+
+	r.POST("/auth/signup", userHandler.CreateUser) // вместо просто CreateUser
+
 	r.POST("/auth/login", Login)
 
 	// --- User profile (быстрый endpoint) ---
@@ -23,7 +28,6 @@ func SetupRoutes(r *gin.Engine) error {
 	musicSvc := services.NewMusicService(musicRepo)
 	musicHandler := handlers.NewMusicHandler(musicSvc)
 
-	r.GET("/artists", musicHandler.ListArtists)
 	r.GET("/artists/:id", musicHandler.GetArtistByID)
 	r.GET("/tracks/search", musicHandler.SearchTracks)
 
@@ -40,9 +44,6 @@ func SetupRoutes(r *gin.Engine) error {
 	r.DELETE("/playlists/:id/tracks/:trackId", CheckAuth, playlistHandler.RemoveTrack)
 
 	// --- Users ---
-	userRepo := repositories.NewUserRepository(repositories.SQLDB)
-	userSvc := services.NewUserService(userRepo)
-	userHandler := handlers.NewUserHandler(userSvc)
 
 	r.GET("/users/me", CheckAuth, userHandler.Me)
 	r.PATCH("/users/me", CheckAuth, userHandler.UpdateMe)
@@ -56,6 +57,7 @@ func SetupRoutes(r *gin.Engine) error {
 
 	r.GET("/artist/me", CheckAuth, RequireRole("artist"), artistHandler.Me)
 	r.POST("/artist/profile", CheckAuth, RequireRole("artist"), artistHandler.CreateProfile)
+	r.GET("/artists", artistHandler.GetAll) // <-- теперь фронт будет получать настоящих артистов
 
 	// --- Uploads (artist only) ---
 	cfg := config.Load()

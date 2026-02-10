@@ -13,4 +13,7 @@ type Track struct {
 	CoverPath       *string   `json:"cover_path,omitempty"`
 	PlayCount       int64     `json:"play_count"`
 	CreatedAt       time.Time `json:"created_at"`
+	Duration        string    `json:"duration,omitempty"` // "mm:ss"
+	AudioURL        *string   `json:"audio_url,omitempty"`
+	CoverURL        *string   `json:"cover_url,omitempty"`
 }

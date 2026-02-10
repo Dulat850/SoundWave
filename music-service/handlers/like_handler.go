@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"music-service/models"
 	"music-service/services"
 
 	"github.com/gin-gonic/gin"
@@ -90,17 +89,4 @@ func (h *LikeHandler) MyLikes(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": ids})
-}
-
-// локальный helper, чтобы не зависеть от других handler-файлов
-func currentUserID(c *gin.Context) (int, bool) {
-	v, ok := c.Get("currentUser")
-	if !ok || v == nil {
-		return 0, false
-	}
-	u, ok := v.(*models.User)
-	if !ok || u == nil || u.ID <= 0 {
-		return 0, false
-	}
-	return u.ID, true
 }

@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"net/http"
-	"strconv"
-
 	"music-service/services"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -70,15 +68,4 @@ func (h *SearchHandler) Search(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid type"})
 		return
 	}
-}
-
-func parseInt(raw string, def int) int {
-	if raw == "" {
-		return def
-	}
-	v, err := strconv.Atoi(raw)
-	if err != nil {
-		return def
-	}
-	return v
 }

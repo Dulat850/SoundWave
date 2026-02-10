@@ -8,9 +8,17 @@ import (
 	"music-service/repositories"
 )
 
+// Ошибки
+var (
+	ErrNotFoundArt = errors.New("artist not found")
+	ErrConflictArt = errors.New("artist already exists")
+)
+
+// Интерфейс сервиса артистов
 type ArtistService interface {
 	Me(ctx context.Context, userID int) (*models.Artist, error)
 	UpsertMe(ctx context.Context, userID int, name string, bio string, avatarPath *string) (*models.Artist, error)
+	GetAll(ctx context.Context) ([]models.Artist, error) // <- исправлено
 }
 
 type artistService struct {
@@ -29,7 +37,7 @@ func (s *artistService) Me(ctx context.Context, userID int) (*models.Artist, err
 	a, err := s.repo.GetByUserID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNotFound
+			return nil, ErrNotFoundArt
 		}
 		return nil, err
 	}
@@ -46,7 +54,7 @@ func (s *artistService) UpsertMe(ctx context.Context, userID int, name string, b
 
 	_, err := s.repo.GetByUserID(ctx, userID)
 	if err == nil {
-		return nil, ErrConflict
+		return nil, ErrConflictArt
 	}
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, err
@@ -63,4 +71,9 @@ func (s *artistService) UpsertMe(ctx context.Context, userID int, name string, b
 		return nil, err
 	}
 	return a, nil
+}
+
+// Реализация метода GetAll
+func (s *artistService) GetAll(ctx context.Context) ([]models.Artist, error) {
+	return s.repo.GetAll(ctx)
 }

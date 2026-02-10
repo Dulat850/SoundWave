@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"music-service/models"
 	"music-service/services"
 
 	"github.com/gin-gonic/gin"
@@ -201,17 +200,4 @@ func (h *PlaylistHandler) RemoveTrack(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
-}
-
-func currentUserID(c *gin.Context) (int, bool) {
-	v, ok := c.Get("currentUser")
-	if !ok || v == nil {
-		return 0, false
-	}
-
-	u, ok := v.(*models.User)
-	if !ok || u == nil || u.ID <= 0 {
-		return 0, false
-	}
-	return u.ID, true
 }
